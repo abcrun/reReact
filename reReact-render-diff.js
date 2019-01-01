@@ -4,7 +4,7 @@ var ELEMENT = 'element', TEXT = 'text', COMPONENT = 'component';
 //Babel将JSX里的标记元素转换为createElement函数
 //这里要实现这个函数，返回{type, nodeType, props}的结构,以便渲染时使用
 function createElement(type, props, args){
-    var isElement = typeof type == 'string',props = Object.assign({}, props), hasChildren = arguments.length > 2;
+    var isElement = typeof type == 'string', props = Object.assign({}, props), hasChildren = arguments.length > 2;
     var children = hasChildren ? [].concat(arguments.slice(2)) : [];
 
     props.children = children.map(function(child) {

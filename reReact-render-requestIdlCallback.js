@@ -4,7 +4,7 @@ var ELEMENT = 'element', TEXT = 'text', COMPONENT = 'component';
 //Babel将JSX里的标记元素转换为createElement函数
 //这里要实现这个函数，返回{type, nodeType, props}的结构,以便渲染时使用
 function createElement(type, props, args){
-    var isElement = typeof type == 'string',props = Object.assign({}, props), hasChildren = arguments.length > 2;
+    var isElement = typeof type == 'string', props = Object.assign({}, props), hasChildren = arguments.length > 2;
     var children = hasChildren ? [].concat(arguments.slice(2)) : [];
 
     props.children = children.map(function(child) {
@@ -87,7 +87,7 @@ var setState = function(newState){
  * 2. 如果type值不一样，则替换新的dom元素，帮设置相关属性
  * 3. 如果没有新的element，则表示这个元素已经被删除
  * 4. 同样如果原实例树不存在的节点，在最新的elmement中存在，则表示新增节点
- * 总结下来就是，父元素对子元素的: set(remove)Attribute, appendChild, removeChild, replaceChild操作
+ * 总结下来就是，父元素对子元素的: set(remove)Attribute, add(remove)EventListener, appendChild, removeChild, replaceChild操作
  **/
 function diff(parentDom, prevInstance, element) {
     if(!prevInstance){
