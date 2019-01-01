@@ -2,7 +2,7 @@
 var ELEMENT = 'element', TEXT = 'text', COMPONENT = 'component';
 
 //Babel将JSX里的标记元素转换为createElement函数
-//这里要实现这个函数，返回{nodeType, props}的结构,以便渲染时使用
+//这里要实现这个函数，返回{type, nodeType, props}的结构,以便渲染时使用
 function createElement(type, props, args){
     var isElement = typeof type == 'string',props = Object.assign({}, props), hasChildren = arguments.length > 2;
     var children = hasChildren ? [].concat(arguments.slice(2)) : [];
@@ -16,7 +16,7 @@ function createElement(type, props, args){
 
 
 //更新时需要对比上一次渲染时的数据，我们需要创建一个实例树instanceTree来保存这些相关数据。
-//为此我们需要保留原始节点的所有相关属性
+//为此我们需要保留原始节点的所有相关属性,同时我们在对比时需要对节点进行操作，所以我们也要保存当前的DOM元素，当然我们也要保存子元素的实例树
 var instanceTree = null;
 
 function render(element, container){
