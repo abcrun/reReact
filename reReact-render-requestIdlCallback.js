@@ -16,7 +16,7 @@ function createElement(type, props, args){
 }
 
 
-var renderQueue = [], currentFiber = null, sliceTime = 1, pendingCommit = false;
+var renderQueue = [], currentFiber = null, timeUnit = 1, pendingCommit = false;
 
 function render(element, container){
     currentFiber = createFiber(element);
@@ -28,14 +28,14 @@ function render(element, container){
 function performWork(idleDeadline){
     currentFiber = currentFiber || renderQueue.shift();
 
-    while(idleDeadline.timeRemaining() > sliceTime && currentFiber){
+    while(idleDeadline.timeRemaining() > timeUnit && currentFiber){
         currentFiber = performUnitOfWork(currentFiber);
     }
 
     if(pendingCommit) commitAllWork();
 
     if(currentFiber || renderQueue.length > 0){
-        requestIdleCallback(sliceRender);
+        requestIdleCallback(performWork);
     }
 }
 
