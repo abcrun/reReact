@@ -28,7 +28,7 @@ function createDom(element) {
         dom = document.createTextNode(element.nodeValue);
     }else if(element.nodeType == COMPONENT){
         var component = new element.type();
-        dom = component.render();
+        dom = createDom(component.render());
     }
 
     //属性操作省略
