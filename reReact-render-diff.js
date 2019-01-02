@@ -116,5 +116,4 @@ function diff(parentDom, prevInstance, element) {
 
         return prevInstance;
     }
-    var prevElement = prevInstance.element, prevDom = prevInstance.dom;
 }
