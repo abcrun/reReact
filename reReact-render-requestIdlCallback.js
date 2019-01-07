@@ -55,36 +55,70 @@ function performWork(idleDeadline){
 }
 
 function performUnitOfWork(currentFiber){
-    var element = currentFiber.element;
+    var element = currentFiber.element, children = element.props.children || [];
 
-    //如果存在instance属性，说明这是一个自定义组件且通过setState传递过来的
-    if(currentFiber.instance){
-        var parentFiber = currentFiber.parent;
-        currentFiber = source.instance.__fiber;
-
-        if(!element){
-            parentFiber.effectTag = DELECTION;
-            parentFiber.effects = (parentFiber.effects || []).push(currentFiber)
-        }else{
-            if(currentFiber.type == element.type){
-                currentFiber.effectTag = UPDATE;
-                currentFiber.props = element.props;
-            }else{
-                var oldFiber = currentFiber;
-                currentFiber = createFiber(element, currentFiber.parent);
-                if(parentFiber.child == oldFiber) parentFiber.child = currentFiber;
-                currentFiber.sibling = oldFiber.sibling;
-            }
-
-            diffFiber(currentFiber, element)
-        }
-
-    }else if(currentFiber.dom){
+    if(currentFiber.dom){//初始化render时，才会有dom属性
         currentFiber = createFiber(element, null);
 
-        diffFiber(currentFiber, element.props.children)
-    }
+        dealChildren(currentFiber, children)
+    }else{
+        if(!currentFiber.stateNode){
 
+        }
+
+        if((element && currentFiber = currentFiber.instance.__fiber && element.type == currentFiber.type) || (alterFiber = currentFiber.alterFiber && alterFiber.type == currentFiber.type)){
+        }
+        var fromSetState = !currentFiber.stateNode, currentFiber = fromSetState ? currentFiber.instance.__fiber || currentFiber, parentFiber = currentFiber.parent;
+        if(fromSetState){
+            currentFiber = Object.assign({}, createFiber(element, parentFiber), { alterFiber: currentFiber })
+        }
+        currentFiber = currentFiber.instance.__fiber || currentFiber, parentFiber = currentFiber.parent, alterFiber = currentFiber.alterFiber;
+        //setState时触发, 对于自定义组件，都会存在__fiber属性(初始化render时创建)
+        if(!currentFiber.stateNode){
+            currentFiber = currentFiber.instance.__fiber;
+            currentFiber = createFiber
+
+        } ;
+
+        var ;
+        if(alterFiber && alterFiber.type == currentFiber.type){
+
+        }else{
+
+        }
+
+        if(!element){
+            parentfiber.effecttag = deletion;
+            parentfiber.effects = (parentfiber.effects || []).push(currentfiber)
+        }else{
+            if(currentfiber.type == element.type){
+                currentfiber.effecttag = update;
+                currentfiber.props = element.props;
+            }else{
+                var oldfiber = currentfiber;
+                currentfiber = createfiber(element, currentfiber.parent);
+
+                var childfiber = parentfiber.child, prevfiber = null;;
+                while(childfiber){
+                    if(childfiber == oldfiber){
+                        if(!prevfiber){
+                            parentfiber.child = currentfiber;
+                        }else{
+                            prevfiber.sibling = currentfiber;
+                        }
+                        currentfiber.sibling = childfiber.sibling;
+                        break;
+                    }
+                    prevsibling = childfiber;
+                    childfiber = childfiber.sibling;
+                }
+
+            }
+
+            difffiber(currentfiber, children)
+        }
+
+    }
 
     if(currentFiber.child){
         return currentFiber.child;
@@ -125,49 +159,42 @@ function createFiber(element, parentFiber) {
 
 
 
-function diffFiber(fiber, element) {
-    var newFiber = {};
+function dealChildren(fiber, children) {
+    var index = 0, oldFiber = fiber.child, prevFiber = newFiber = null;
+    while(index < children.length || oldFiber != null){
+        var elm = index < children.length && children[index],
+            sameType = oldFiber && elm && elm.type == oldFiber.type;
 
-    if(fiber.type == element.type){
-        fiber.effectTag = UPDATE;
-        fiber.props = element.props;
-
-        //只有type值一样，我们才需要继续处理其子元素
-        var index = 0, oldFiber = fiber.child, prevFiber = newFiber = null, children = element.props.children;
-        while(index < children.length || oldFiber != null){
-            var elm = index < children.length && children[index],
-                sameType = oldFiber && elm && elm.type == oldFiber.type;
-
-            if(oldFiber){
-                if(sameType){
-                    newFiber = Object.assign({}, {
-                        effectTag: UPDATE,
-                        props: element.props
-                    })
-                }else{
-                    //对于要删除的fiber不应该存在于原来的fiber链表中，因此需要在parent的effects中添加记录，不要在保留链表中此fiber结构数据
-                    oldFiber.effectTag = DELETION;
-                    fiber.effects = (fiber.effects || []).push(oldFiber)
-                }
-
-                oldFiber = oldFiber.sibling;
+        if(oldFiber){
+            if(sameType){
+                newFiber = Object.assign(oldFiber, {
+                    effectTag: UPDATE,
+                    props: element.props,
+                    alternate: oldFiber
+                })
             }else{
-                newFiber = createFiber(elm, fiber);
+                //对于要删除的fiber不应该存在于原来的fiber链表中，因此需要在parent的effects中添加记录，不要在保留链表中此fiber结构数据
+                oldFiber.effectTag = DELETION;
+                fiber.effects = (fiber.effects || []).push(oldFiber)
             }
 
-
-            //由于fiber有可能会被删除,需重设链表
-            prevFiber = newFiber;
-
-            if(index == 0){
-                fiber.child = newFiber;
-            }else{
-                prevFiber.sibling = newFiber;
-            }
-
-            index++;
-
+            oldFiber = oldFiber.sibling;
+        }else{
+            newFiber = createFiber(elm, fiber);
         }
 
+
+        //由于fiber有可能会被删除,需重设链表
+        prevFiber = newFiber;
+
+        if(index == 0){
+            fiber.child = newFiber;
+        }else{
+            prevFiber.sibling = newFiber;
+        }
+
+        index++;
+
     }
+
 }
