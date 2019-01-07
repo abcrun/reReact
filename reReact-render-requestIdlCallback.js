@@ -1,6 +1,6 @@
 //可以将元素分为三类Element，Text，和自定义组件
 var ELEMENT = 'element', TEXT = 'text', COMPONENT = 'component';
-var PLACEMENT = 'pacement', UPDATE = 'update', DELETION = 'delection';
+var PLACEMENT = 'placement', UPDATE = 'update', DELETION = 'deletion';
 
 //Babel将JSX里的标记元素转换为createElement函数
 //这里要实现这个函数，返回{type, nodeType, props}的结构,以便渲染时使用
@@ -19,10 +19,25 @@ function createElement(type, props, args){
 var renderQueue = [], currentFiber = null, timeUnit = 1, pendingCommit = false;
 
 function render(element, container){
-    currentFiber = createFiber(element);
-    renderQueue.push(currentFiber);
+    renderQueue.push({
+        dom: container,
+        element: element
+    })
 
     requestIdleCallback(performWork)
+}
+
+function setState(newState){
+    this.state = Object.assign({}, this.state, newState);
+
+    var newElement = this.render(this.props);
+
+    renderQueue.push({
+        instance: this,
+        element: newElement
+    })
+
+    requestIdleCallback(performWork);
 }
 
 function performWork(idleDeadline){
@@ -40,6 +55,20 @@ function performWork(idleDeadline){
 }
 
 function performUnitOfWork(currentFiber){
+    var element = currentFiber.element;
+
+    //如果存在instance属性，说明这是一个自定义组件且通过setState传递过来的
+    if(currentFiber.instance){
+        currentFiber = source.instance.__fiber;
+
+        diffFiber(currentFiber.parent, element)
+    }else if(currentFiber.dom){
+        currentFiber = createFiber(element, null);
+
+        diffFiber(currentFiber, element.props.children)
+    }
+
+
     if(currentFiber.child){
         return currentFiber.child;
     }
@@ -47,7 +76,7 @@ function performUnitOfWork(currentFiber){
 
 //创建实例
 function createFiber(element, parentFiber) {
-    var fiber = {}, dom, props = element.props, hasChildren = props.children.length, children = hasChildren ? props.children : [];
+    var dom, props = element.props, hasChildren = props.children.length, children = hasChildren ? props.children : [];
     var isElement = element.nodeType == ELEMENT, isText = element.nodeType == TEXT, isComponent = element.nodeType == COMPONENT;
 
     if(isElement){
@@ -59,19 +88,11 @@ function createFiber(element, parentFiber) {
         fiber.props = props;
         fiber.parent = parentFiber || null;
 
-        var prevFiber = null, children.map(function(child, index){
-            var childFiber = createFiber(child, fiber);
-
-            if(index == 0) fiber.child = childFiber;
-            if(prevFiber) prevFiber.sibling = childFiber;
-
-            prevFiber = childFiber;
-        })
 
     }else if(isComponent){
-        var component = new element.type(), componentElement = component.render();
+        var component = new element.type(props), componentElement = component.render();
 
-        fiber = createFiber(componentElement)
+        fiber = createFiber(componentElement, parentFiber)
 
         //对于自定义组件，当组件的某些状态值发生变化时，我们只需要重新渲染组件内的内容，因此组件需要获取之前渲染的实例对象才能跟新状态进行对比
         component.__fiber = fiber;
@@ -85,15 +106,7 @@ function createFiber(element, parentFiber) {
     return fiber;
 }
 
-var setState = function(newState){
-    this.state = Object.assign({}, this.state, newState);
 
-    var newElement = this.render(), fiber = this.__fiber;
-
-    renderQueue.push(newFiber);
-
-    this.__fiber = newFiber;
-}
 
 function diffFiber(fiber, element) {
     var newFiber = {};
