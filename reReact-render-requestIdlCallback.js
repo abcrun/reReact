@@ -59,9 +59,26 @@ function performUnitOfWork(currentFiber){
 
     //如果存在instance属性，说明这是一个自定义组件且通过setState传递过来的
     if(currentFiber.instance){
+        var parentFiber = currentFiber.parent;
         currentFiber = source.instance.__fiber;
 
-        diffFiber(currentFiber.parent, element)
+        if(!element){
+            parentFiber.effectTag = DELECTION;
+            parentFiber.effects = (parentFiber.effects || []).push(currentFiber)
+        }else{
+            if(currentFiber.type == element.type){
+                currentFiber.effectTag = UPDATE;
+                currentFiber.props = element.props;
+            }else{
+                var oldFiber = currentFiber;
+                currentFiber = createFiber(element, currentFiber.parent);
+                if(parentFiber.child == oldFiber) parentFiber.child = currentFiber;
+                currentFiber.sibling = oldFiber.sibling;
+            }
+
+            diffFiber(currentFiber, element)
+        }
+
     }else if(currentFiber.dom){
         currentFiber = createFiber(element, null);
 
