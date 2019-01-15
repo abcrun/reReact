@@ -172,7 +172,7 @@ function createFiber(element, parentFiber) {
         fiber.props = props;
         fiber.parent = parentFiber || null;
 
-        instance.__fiber = componentFiber;
+        instance.__fiber = fiber;
     }else if(isText){
         dom = document.createTextNode(element.nodeValue);
 
