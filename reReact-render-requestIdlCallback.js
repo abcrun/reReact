@@ -81,6 +81,7 @@ function initialFiber(){
             }else{
                 currentFiber = createFiber(element, parentFiber);
 
+                //原fiber被新fiber替换，需要将原fiber的的兄弟父子关系赋给新的fiber
                 var childFiber = parentFiber.child, prevFiber = null;;
                 while(childFiber){
                     if(childFiber == oldFiber){
@@ -149,6 +150,7 @@ function commitAllWork(){
 function createFiber(element, parentFiber) {
     var dom, props = element.props, hasChildren = props.children.length, children = hasChildren ? props.children : [];
     var isElement = element.nodeType == ELEMENT, isText = element.nodeType == TEXT, isComponent = element.nodeType == COMPONENT;
+    var fiber = {};
 
     if(isElement){
         dom = document.createElement(element.type);
@@ -161,13 +163,16 @@ function createFiber(element, parentFiber) {
 
 
     }else if(isComponent){
-        var component = new element.type(props), componentElement = component.render();
+        var instance = new element.type(props), componentElement = instance.render();
+        props.children = componentElement;
 
-        fiber = createFiber(componentElement, parentFiber)
+        fiber.stateNode = instance;
+        fiber.type = element.type;
+        fiber.effectTag = PLACEMENT;
+        fiber.props = props;
+        fiber.parent = parentFiber || null;
 
-        //对于自定义组件，当组件的某些状态值发生变化时，我们只需要重新渲染组件内的内容，因此组件需要获取之前渲染的实例对象才能跟新状态进行对比
-        component.__fiber = fiber;
-
+        instance.__fiber = componentFiber;
     }else if(isText){
         dom = document.createTextNode(element.nodeValue);
 
@@ -183,13 +188,14 @@ function dealChildren(fiber, children) {
     var index = 0, oldFiber = fiber.child, prevFiber = newFiber = null;
     while(index < children.length || oldFiber != null){
         var elm = index < children.length && children[index];
-        if(elm.nodeType == COMPONENT){
+        /*if(elm.nodeType == COMPONENT){
             var component = new elm.type();
             elm = component.render();
-        }
+        }*/
 
         var sameType = oldFiber && elm && elm.type == oldFiber.type;
 
+        //有oldFiber说明已经存在Fiber链表，是setState操作
         if(oldFiber){
             if(sameType){
                 newFiber = Object.assign(oldFiber, {
@@ -198,9 +204,12 @@ function dealChildren(fiber, children) {
                     alternate: oldFiber
                 })
             }else{
-                //对于要删除的fiber不应该存在于原来的fiber链表中，因此需要在parent的effects中添加记录，不要在保留链表中此fiber结构数据
-                oldFiber.effectTag = DELETION;
-                fiber.effects = (fiber.effects || []).push(oldFiber)
+                if(!elm){
+                    //对于要删除的fiber不应该存在于原来的fiber链表中，因此需要在parent的effects中添加记录，不要在保留链表中此fiber结构数据
+                    oldFiber.effectTag = DELETION;
+                    fiber.effects = (fiber.effects || []).push(oldFiber)
+                }else{
+                }
             }
 
             oldFiber = oldFiber.sibling;
