@@ -61,8 +61,8 @@ function initialFiber(){
     var element = update.element;
     if(update.dom){//for render
         currentFiber = createFiber(element, null);
-    }else if(!render.stateNode){//for setState
-        currentFiber = render.instance.__fiber;
+    }else if(update.instance){//for component
+        currentFiber = update.__fiber;
         var parentFiber = currentFiber.parent;
         if(!element){
             parentFiber.effectTag = DELETION;
