@@ -1,5 +1,6 @@
 //可以将元素分为三类Element，Text，和自定义组件
 var ELEMENT = 'element', TEXT = 'text', COMPONENT = 'component';
+//render操作的三种状态
 var PLACEMENT = 'placement', UPDATE = 'update', DELETION = 'deletion';
 
 //Babel将JSX里的标记元素转换为createElement函数
@@ -188,27 +189,24 @@ function dealChildren(fiber, children) {
     var index = 0, oldFiber = fiber.child, prevFiber = newFiber = null;
     while(index < children.length || oldFiber != null){
         var elm = index < children.length && children[index];
-        /*if(elm.nodeType == COMPONENT){
-            var component = new elm.type();
-            elm = component.render();
-        }*/
-
         var sameType = oldFiber && elm && elm.type == oldFiber.type;
 
         //有oldFiber说明已经存在Fiber链表，是setState操作
         if(oldFiber){
             if(sameType){
+                var props = elm.props;
+                if(elm.nodeType == COMPONENT) props.children = oldFiber.stateNode.render(props);
                 newFiber = Object.assign(oldFiber, {
                     effectTag: UPDATE,
-                    props: elm.props,
-                    alternate: oldFiber
+                    props: props
                 })
             }else{
-                if(!elm){
+                if(elm){
+                    newFiber = createFiber(elm, fiber);
+                }else{
                     //对于要删除的fiber不应该存在于原来的fiber链表中，因此需要在parent的effects中添加记录，不要在保留链表中此fiber结构数据
                     oldFiber.effectTag = DELETION;
                     fiber.effects = (fiber.effects || []).push(oldFiber)
-                }else{
                 }
             }
 

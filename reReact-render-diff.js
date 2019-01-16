@@ -105,7 +105,9 @@ function diff(parentDom, prevInstance, element) {
         var max = Math.max(prevInstance.childInstances.length, element.props.children.length), newChildInstances = [];
         for(var i = 0; i < max; i++){
             var childInstance = prevInstance.childInstances[i];
-    		var childElement = element.props[i];
+    		var childElement = element.props.children[i];
+
+            //这里留有一个bug，如果childElement是个组件怎么办？可以参考reReact-render-requestIdlCallback处理方式;
 
     		var newChildInstance = diff(prevInstance.dom, childInstance, childElement);
     		newChildInstances.push(newChildInstance);
